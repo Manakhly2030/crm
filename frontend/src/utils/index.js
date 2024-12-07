@@ -3,7 +3,7 @@ import TaskPriorityIcon from '@/components/Icons/TaskPriorityIcon.vue'
 import { usersStore } from '@/stores/users'
 import { gemoji } from 'gemoji'
 import { useTimeAgo } from '@vueuse/core'
-import { toast, convertToUserTimezone } from 'frappe-ui'
+import { toast, dayjsLocal, dayjs } from 'frappe-ui'
 import { h } from 'vue'
 
 export function createToast(options) {
@@ -38,8 +38,36 @@ export function formatTime(seconds) {
   return formattedTime.trim()
 }
 
-export function formatDate(date, format = 'EEE, MMM d, yyyy h:mm a') {
-  return convertToUserTimezone(date, format)
+export function formatDate(date, format, onlyDate = false, onlyTime = false) {
+  if (!date) return ''
+  format = getFormat(date, format, onlyDate, onlyTime, false)
+  return dayjsLocal(date).format(format)
+}
+
+export function getFormat(
+  date,
+  format,
+  onlyDate = false,
+  onlyTime = false,
+  withDate = true,
+) {
+  if (!date) return ''
+  let dateFormat =
+    window.sysdefaults.date_format
+      .replace('mm', 'MM')
+      .replace('yyyy', 'YYYY')
+      .replace('dd', 'DD') || 'YYYY-MM-DD'
+  let timeFormat = window.sysdefaults.time_format || 'HH:mm:ss'
+  format = format || 'ddd, MMM d, YYYY h:mm a'
+
+  if (onlyDate) format = dateFormat
+  if (onlyTime) format = timeFormat
+  if (onlyTime && onlyDate) format = `${dateFormat} ${timeFormat}`
+
+  if (withDate) {
+    return dayjs(date).format(format)
+  }
+  return format
 }
 
 export function timeAgo(date) {
